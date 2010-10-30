@@ -7,6 +7,11 @@
 ACTION=="change", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", TEST=="block", ATTR{block/*/uevent}="change"
 
 ACTION!="add|change", GOTO="persistent_storage_end"
+
+# run scsi_id and ata_id on the actual SCSI device
+SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", ATTR{vendor}=="ATA", IMPORT{program}="ata_id --export $root/bsg/$kerne"
+SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", IMPORT{program}="scsi_id --whitelisted --export --device $root/bsg/$kernel"
+
 SUBSYSTEM!="block", GOTO="persistent_storage_end"
 
 # skip rules for inappropriate block devices
@@ -45,6 +50,10 @@ KERNEL=="sd*[!0-9]|sr*", ENV{ID_SERIAL}!="?*", SUBSYSTEMS=="scsi", ATTRS{type}==
 
 # Run ata_id on non-removable USB Mass Storage (SATA/PATA disks in enclosures)
 KERNEL=="sd*[!0-9]|sr*", ENV{ID_SERIAL}!="?*", ATTR{removable}=="0", SUBSYSTEMS=="usb", IMPORT{program}="ata_id --export $tempnode"
+
+# import ata_id/scsi_id data from the scsi_device captured above, if available
+SUBSYSTEMS=="scsi", IMPORT{parent}="ID_*"
+
 # USB devices use their own serial number
 KERNEL=="sd*[!0-9]|sr*", ENV{ID_SERIAL}!="?*", SUBSYSTEMS=="usb", IMPORT{program}="usb_id --export %p"
 
