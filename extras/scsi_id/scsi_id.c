@@ -657,7 +657,6 @@ int main(int argc, char **argv)
 			retval = 2;
 			goto exit;
 		}
-		free(newargv);
 	}
 
 	/*
@@ -675,6 +674,11 @@ int main(int argc, char **argv)
 	retval = scsi_id(udev, maj_min_dev);
 
 exit:
+	if (newargv) {
+		free(newargv[0]);
+		free(newargv);
+	}
+
 	udev_unref(udev);
 	udev_log_close();
 	return retval;
