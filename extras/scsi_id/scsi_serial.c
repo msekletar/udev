@@ -953,7 +953,8 @@ int scsi_get_serial(struct udev *udev,
 		}
 	} else if (page_code != 0x00) {
 		info(udev, "%s: unsupported page code 0x%d\n", dev_scsi->kernel, page_code);
-		return 1;
+		retval = 1;
+		goto completed;
 	}
 
 	/*
