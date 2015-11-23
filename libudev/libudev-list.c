@@ -188,6 +188,9 @@ void udev_list_cleanup_entries(struct udev *udev, struct udev_list_node *list)
 
 struct udev_list_entry *udev_list_get_entry(struct udev_list_node *list)
 {
+	if (!list)
+		return NULL;
+
 	if (udev_list_is_empty(list))
 		return NULL;
 	return list_node_to_entry(list->next);

@@ -226,11 +226,13 @@ static inline void udev_selinux_exit(struct udev *udev) {}
 static inline void udev_selinux_lsetfilecon(struct udev *udev, const char *file, unsigned int mode) {}
 static inline void udev_selinux_setfscreatecon(struct udev *udev, const char *file, unsigned int mode) {}
 static inline void udev_selinux_resetfscreatecon(struct udev *udev) {}
+static inline int label_apply(const char *path, const char *label) {}
 #else
 void udev_selinux_init(struct udev *udev);
 void udev_selinux_exit(struct udev *udev);
 void udev_selinux_lsetfilecon(struct udev *udev, const char *file, unsigned int mode);
 void udev_selinux_setfscreatecon(struct udev *udev, const char *file, unsigned int mode);
 void udev_selinux_resetfscreatecon(struct udev *udev);
+int label_apply(const char *path, const char *label);
 #endif
 #endif

@@ -41,6 +41,7 @@ struct udev_event *udev_event_new(struct udev_device *dev)
 	event->dev = dev;
 	event->udev = udev_device_get_udev(dev);
 	udev_list_init(&event->run_list);
+	udev_list_init(&event->seclabel_list);
 	event->mode = 0660;
 	dbg(event->udev, "allocated event %p\n", event);
 	return event;
@@ -51,6 +52,7 @@ void udev_event_unref(struct udev_event *event)
 	if (event == NULL)
 		return;
 	udev_list_cleanup_entries(event->udev, &event->run_list);
+	udev_list_cleanup_entries(event->udev, &event->seclabel_list);
 	free(event->tmp_node);
 	free(event->program_result);
 	free(event->name);
@@ -380,7 +382,7 @@ subst:
 				 minor(udev_device_get_devnum(dev)));
 			if (event->tmp_node == NULL)
 				break;
-			udev_node_mknod(dev, event->tmp_node, makedev(0, 0), 0600, 0, 0);
+			udev_node_mknod(dev, event->tmp_node, makedev(0, 0), 0600, 0, 0, NULL);
 			l = util_strpcpy(&s, l, event->tmp_node);
 			break;
 		}
@@ -619,7 +621,7 @@ int udev_event_execute_rules(struct udev_event *event, struct udev_rules *rules)
 		if (event->mode == 0600 && event->gid > 0)
 		  event->mode = 0660;
 		
-		err = udev_node_add(dev, event->mode, event->uid, event->gid);
+		err = udev_node_add(dev, event->mode, event->uid, event->gid, &event->seclabel_list);
 exit_add:
 		if (delete_kdevnode && udev_device_get_knodename(dev) != NULL) {
 			struct stat stats;

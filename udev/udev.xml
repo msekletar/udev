@@ -190,6 +190,13 @@
               </listitem>
             </varlistentry>
             <varlistentry>
+              <term><option>SECLABEL{<replaceable>module</replaceable>}</option></term>
+              <listitem>
+                <para>Applies the specified Linux Security Module label to the
+                device node. Note that at this time only selinux is supported.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
               <term><option>ATTR{<replaceable>filename</replaceable>}</option></term>
               <listitem>
                 <para>Match sysfs attribute values of the event device. Trailing

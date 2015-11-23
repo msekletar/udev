@@ -160,6 +160,7 @@ enum token_type {
 	TK_A_GROUP_ID,			/* gid_t */
 	TK_A_MODE_ID,			/* mode_t */
 	TK_A_ENV,			/* val, attr */
+	TK_A_SECLABEL,			/* val, attr */
 	TK_A_NAME,			/* val */
 	TK_A_DEVLINK,			/* val */
 	TK_A_EVENT_TIMEOUT,		/* int */
@@ -295,6 +296,7 @@ static const char *token_str(enum token_type type)
 		[TK_A_GROUP_ID] =		"A GROUP_ID",
 		[TK_A_MODE_ID] =		"A MODE_ID",
 		[TK_A_ENV] =			"A ENV",
+		[TK_A_SECLABEL] =		"A SECLABEL",
 		[TK_A_NAME] =			"A NAME",
 		[TK_A_DEVLINK] =		"A DEVLINK",
 		[TK_A_EVENT_TIMEOUT] =		"A EVENT_TIMEOUT",
@@ -363,6 +365,7 @@ static void dump_token(struct udev_rules *rules, struct token *token)
 	case TK_M_ENV:
 	case TK_A_ATTR:
 	case TK_A_ENV:
+	case TK_A_SECLABEL:
 		dbg(rules->udev, "%s %s '%s' '%s'(%s)\n",
 		    token_str(type), operation_str(op), attr, value, string_glob_str(glob));
 		break;
@@ -1028,6 +1031,7 @@ static int rule_add_key(struct rule_tmp *rule_tmp, enum token_type type,
 	case TK_M_ATTRS:
 	case TK_A_ATTR:
 	case TK_A_ENV:
+	case TK_A_SECLABEL:
 		attr = data;
 		token->key.value_off = add_string(rule_tmp->rules, value);
 		token->key.attr_off = add_string(rule_tmp->rules, attr);
@@ -1255,6 +1259,17 @@ static int add_rule(struct udev_rules *rules, char *line,
 			} else {
 				rule_add_key(&rule_tmp, TK_A_ATTR, op, value, attr);
 			}
+			continue;
+		}
+
+		if (strncmp(key, "SECLABEL{", sizeof("SECLABEL{")-1) == 0) {
+			attr = get_key_attribute(rules->udev, key + sizeof("SECLABEL")-1);
+			if (!attr) {
+				err(rules->udev, "error parsing SECLABEL attribute\n");
+				goto invalid;
+			}
+
+			rule_add_key(&rule_tmp, TK_A_SECLABEL, op, value, attr);
 			continue;
 		}
 
@@ -2461,6 +2476,20 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 			     &rules->buf[rule->rule.filename_off],
 			     rule->rule.filename_line);
 			break;
+		case TK_A_SECLABEL: {
+			const char *name, *label;
+
+			name = &rules->buf[cur->key.attr_off];
+			label = &rules->buf[cur->key.value_off];
+
+			if (cur->key.op == OP_ASSIGN || cur->key.op == OP_ASSIGN_FINAL)
+				udev_list_cleanup_entries(event->udev, &event->seclabel_list);
+
+			udev_list_entry_add(event->udev, &event->seclabel_list, name, label, 0, 0);
+
+			dbg(event->udev, "SECLABEL{%s}='%s' %s:%u\n", name, label, &rules->buf[rule->rule.filename_off], rule->rule.filename_line);
+			break;
+		}
 		case TK_A_ENV:
 			{
 				const char *name = &rules->buf[cur->key.attr_off];

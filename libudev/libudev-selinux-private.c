@@ -81,3 +81,15 @@ void udev_selinux_resetfscreatecon(struct udev *udev)
 	if (setfscreatecon(selinux_prev_scontext) < 0)
 		err(udev, "setfscreatecon failed: %m\n");
 }
+
+int label_apply(const char *path, const char *label)
+{
+        int r = 0;
+
+        if (!selinux_enabled)
+                return 0;
+
+        r = setfilecon(path, (char *)label);
+
+        return r;
+}
