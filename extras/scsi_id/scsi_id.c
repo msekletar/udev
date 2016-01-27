@@ -634,7 +634,7 @@ int main(int argc, char **argv)
 	int retval = 0;
 	char maj_min_dev[MAX_PATH_LEN];
 	int newargc;
-	char **newargv;
+	char **newargv = NULL;
 
 	udev = udev_new();
 	if (udev == NULL)
@@ -646,7 +646,6 @@ int main(int argc, char **argv)
 	/*
 	 * Get config file options.
 	 */
-	newargv = NULL;
 	retval = get_file_options(udev, NULL, NULL, &newargc, &newargv);
 	if (retval < 0) {
 		retval = 1;
