@@ -110,17 +110,38 @@ static struct udev_device *handle_scsi_fibre_channel(struct udev_device *parent,
 {
 	struct udev *udev  = udev_device_get_udev(parent);
 	struct udev_device *targetdev;
+	struct udev_device *rportdev;
+	struct udev_device *hostdev;
+	struct udev_device *vportdev;
 	struct udev_device *fcdev = NULL;
 	const char *port;
-	char *lun = NULL;;
+	char *lun = NULL;
 
 	targetdev = udev_device_get_parent_with_subsystem_devtype(parent, "scsi", "scsi_target");
 	if (targetdev == NULL)
 		return NULL;
 
-	fcdev = udev_device_new_from_subsystem_sysname(udev, "fc_transport", udev_device_get_sysname(targetdev));
-	if (fcdev == NULL)
-		return NULL;
+	rportdev = udev_device_get_parent(targetdev);
+	if (rportdev == NULL)
+		goto skip_npiv_check;
+
+	hostdev = udev_device_get_parent(rportdev);
+	if (hostdev == NULL)
+		goto skip_npiv_check;
+
+	vportdev = udev_device_get_parent(hostdev);
+	if (vportdev == NULL)
+		goto skip_npiv_check;
+
+	fcdev = udev_device_new_from_subsystem_sysname(udev, "fc_vports", udev_device_get_sysname(vportdev));
+
+skip_npiv_check:
+	if (!fcdev) {
+		fcdev = udev_device_new_from_subsystem_sysname(udev, "fc_transport", udev_device_get_sysname(targetdev));
+		if (fcdev == NULL)
+			return NULL;
+	}
+
 	port = udev_device_get_sysattr_value(fcdev, "port_name");
 	if (port == NULL) {
 		parent = NULL;
@@ -129,8 +150,7 @@ static struct udev_device *handle_scsi_fibre_channel(struct udev_device *parent,
 
 	format_lun_number(parent, &lun);
 	path_prepend(path, "fc-%s-%s", port, lun);
-	if (lun)
-		free(lun);
+	free(lun);
 out:
 	udev_device_unref(fcdev);
 	return parent;
