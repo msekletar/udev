@@ -1039,7 +1039,7 @@ int main(int argc, char *argv[])
 	/* Set firmware loading timeout to UDEV_EVENT_TIMEOUT */
 	fd = open("/sys/class/firmware/timeout", O_RDWR);
 	if (fd < 0 ) {
-		if (errno != EEXIST) err(udev, "error setting /sys/class/firmware/timeout: %m\n");
+		if (errno != ENOENT) err(udev, "error setting /sys/class/firmware/timeout: %m\n");
 	} else {
 		write(fd, UDEV_EVENT_TIMEOUT_STR, sizeof(UDEV_EVENT_TIMEOUT_STR));
 		close(fd);
