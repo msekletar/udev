@@ -1,0 +1,10 @@
+Makefile.in
+aclocal.m4
+configure
+extras/gudev/docs/Makefile.in
+libudev/docs/Makefile.in
+*.[1-8]
+*.o
+*.log
+*.la
+*.lo
