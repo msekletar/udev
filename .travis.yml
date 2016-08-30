@@ -1,0 +1,22 @@
+language: c
+
+before_install:
+- sudo apt-get update -qq
+
+install:
+- sudo apt-get -qq install build-essential
+- sudo apt-get -qq install gperf
+- sudo apt-get -qq install pkg-config
+- sudo apt-get -qq install libglib2.0-dev
+- sudo apt-get -qq install libacl1-dev
+- sudo apt-get -qq install libusb-dev
+- sudo apt-get -qq install libselinux1-dev
+- sudo apt-get -qq install docbook-xsl
+- sudo apt-get -qq install xsltproc
+- sudo apt-get -qq install linux-headers-generic
+- sudo apt-get -qq install libv4l-dev
+
+script:
+- sudo ln -s ../libv4l1-videodev.h /usr/include/linux/videodev.h
+- ./configure 'CFLAGS=-Wno-unused-result -Wno-deprecated-declarations' --with-selinux --prefix=/usr --exec-prefix=/usr --sysconfdir=/etc --sbindir=/sbin --libexecdir=/lib/udev --with-rootlibdir=/lib64 --disable-introspection
+- make
