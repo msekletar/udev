@@ -39,7 +39,6 @@ int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mod
 	struct udev_list_entry *entry;
 	struct stat stats;
 	int err = 0;
-	bool new_node = false;
 
 	if (major(devnum) == 0)
 		devnum = udev_device_get_devnum(dev);
@@ -55,6 +54,11 @@ int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mod
 	if (lstat(file, &stats) == 0) {
 		if (((stats.st_mode & S_IFMT) == (mode & S_IFMT)) && (stats.st_rdev == devnum)) {
 			info(udev, "preserve file '%s', because it has correct dev_t\n", file);
+
+			if (stats.st_mode != mode || stats.st_uid != uid || stats.st_gid != gid)
+				info(udev, "set permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
+			else
+				info(udev, "preserve permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
 
 			/* set selinux file context on add events */
 			if (strcmp(udev_device_get_action(dev), "add") == 0)
@@ -82,7 +86,7 @@ int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mod
 				unlink(file_tmp);
 				goto exit;
 			}
-			new_node = true;
+			info(udev, "set permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
 		}
 	} else {
 		info(udev, "mknod(%s, %#o, (%u,%u))\n", file, mode, major(devnum), minor(devnum));
@@ -98,29 +102,25 @@ int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mod
 		} while (err == -ENOENT);
 		if (err != 0)
 			err(udev, "mknod(%s, %#o, (%u,%u) failed: %m\n", file, mode, major(devnum), minor(devnum));
-		new_node = true;
+		info(udev, "set permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
 	}
 
-	if (new_node || (strcmp(udev_device_get_action(dev), "add") == 0)) {
-		info(udev, "set permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
+	chmod(file, mode);
+	chown(file, uid, gid);
 
-		chmod(file, mode);
-		chown(file, uid, gid);
+	udev_list_entry_foreach(entry, udev_list_get_entry(seclabel_list)) {
+		const char *name, *label;
 
-		udev_list_entry_foreach(entry, udev_list_get_entry(seclabel_list)) {
-			const char *name, *label;
+		name = udev_list_entry_get_name(entry);
+		label = udev_list_entry_get_value(entry);
 
-			name = udev_list_entry_get_name(entry);
-			label = udev_list_entry_get_value(entry);
-
-			if (strcmp(name, "selinux") == 0) {
-				if (label_apply(file, label) < 0)
-					err(udev, "SECLABEL: failed to set SELinux label '%s'", label);
-				else
-					dbg(udev, "SECLABEL: set SELinux label '%s'", label);
-			} else
-				err(udev, "SECLABEL: unknown subsystem, ignoring '%s'='%s'", name, label);
-		}
+		if (strcmp(name, "selinux") == 0) {
+			if (label_apply(file, label) < 0)
+				err(udev, "SECLABEL: failed to set SELinux label '%s'", label);
+			else
+				dbg(udev, "SECLABEL: set SELinux label '%s'", label);
+		} else
+			err(udev, "SECLABEL: unknown subsystem, ignoring '%s'='%s'", name, label);
 	}
 
 exit:
