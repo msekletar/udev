@@ -2399,6 +2399,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				if (cur->key.op == OP_ASSIGN_FINAL)
 					event->owner_final = 1;
 				udev_event_apply_format(event, &rules->buf[cur->key.value_off], owner, sizeof(owner));
+				event->owner_set = true;
 				event->uid = util_lookup_user(event->udev, owner);
 				info(event->udev, "OWNER %u %s:%u\n",
 				     event->uid,
@@ -2415,6 +2416,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				if (cur->key.op == OP_ASSIGN_FINAL)
 					event->group_final = 1;
 				udev_event_apply_format(event, &rules->buf[cur->key.value_off], group, sizeof(group));
+				event->group_set = true;
 				event->gid = util_lookup_group(event->udev, group);
 				info(event->udev, "GROUP %u %s:%u\n",
 				     event->gid,
@@ -2432,6 +2434,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				if (cur->key.op == OP_ASSIGN_FINAL)
 					event->mode_final = 1;
 				udev_event_apply_format(event, &rules->buf[cur->key.value_off], mode, sizeof(mode));
+				event->mode_set = true;
 				event->mode = strtol(mode, &endptr, 8);
 				if (endptr[0] != '\0') {
 					err(event->udev, "invalide mode '%s' set default mode 0660\n", mode);
@@ -2448,6 +2451,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				break;
 			if (cur->key.op == OP_ASSIGN_FINAL)
 				event->owner_final = 1;
+			event->owner_set = true;
 			event->uid = cur->key.uid;
 			info(event->udev, "OWNER %u %s:%u\n",
 			     event->uid,
@@ -2459,6 +2463,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				break;
 			if (cur->key.op == OP_ASSIGN_FINAL)
 				event->group_final = 1;
+			event->group_set = true;
 			event->gid = cur->key.gid;
 			info(event->udev, "GROUP %u %s:%u\n",
 			     event->gid,
@@ -2470,6 +2475,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 				break;
 			if (cur->key.op == OP_ASSIGN_FINAL)
 				event->mode_final = 1;
+			event->mode_set = true;
 			event->mode = cur->key.mode;
 			info(event->udev, "MODE %#o %s:%u\n",
 			     event->mode,

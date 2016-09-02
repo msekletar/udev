@@ -382,7 +382,7 @@ subst:
 				 minor(udev_device_get_devnum(dev)));
 			if (event->tmp_node == NULL)
 				break;
-			udev_node_mknod(dev, event->tmp_node, makedev(0, 0), 0600, 0, 0, NULL);
+			udev_node_mknod(dev, event->tmp_node, makedev(0, 0), true, 0600, 0, 0, NULL);
 			l = util_strpcpy(&s, l, event->tmp_node);
 			break;
 		}
@@ -537,6 +537,7 @@ int udev_event_execute_rules(struct udev_event *event, struct udev_rules *rules)
 {
 	struct udev_device *dev = event->dev;
 	int err = 0;
+	bool apply;
 
 	if (udev_device_get_sysname_old(dev) != NULL &&
 	    strcmp(udev_device_get_sysname_old(dev), udev_device_get_sysname(dev)) != 0) {
@@ -620,8 +621,9 @@ int udev_event_execute_rules(struct udev_event *event, struct udev_rules *rules)
 		/* change default 0600 to 0660 if a group is assigned */
 		if (event->mode == 0600 && event->gid > 0)
 		  event->mode = 0660;
-		
-		err = udev_node_add(dev, event->mode, event->uid, event->gid, &event->seclabel_list);
+
+		apply = strcmp(udev_device_get_action(dev), "add") == 0 || event->owner_set || event->group_set || event->mode_set;
+		err = udev_node_add(dev, apply, event->mode, event->uid, event->gid, &event->seclabel_list);
 exit_add:
 		if (delete_kdevnode && udev_device_get_knodename(dev) != NULL) {
 			struct stat stats;
