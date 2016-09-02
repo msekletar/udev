@@ -33,7 +33,7 @@
 
 #define TMP_FILE_EXT		".udev-tmp"
 
-int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel_list)
+int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, bool apply, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel_list)
 {
 	struct udev *udev = udev_device_get_udev(dev);
 	struct udev_list_entry *entry;
@@ -105,22 +105,24 @@ int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mod
 		info(udev, "set permissions %s, %#o, uid=%u, gid=%u\n", file, mode, uid, gid);
 	}
 
-	chmod(file, mode);
-	chown(file, uid, gid);
+	if (apply) {
+		chmod(file, mode);
+		chown(file, uid, gid);
 
-	udev_list_entry_foreach(entry, udev_list_get_entry(seclabel_list)) {
-		const char *name, *label;
+		udev_list_entry_foreach(entry, udev_list_get_entry(seclabel_list)) {
+			const char *name, *label;
 
-		name = udev_list_entry_get_name(entry);
-		label = udev_list_entry_get_value(entry);
+			name = udev_list_entry_get_name(entry);
+			label = udev_list_entry_get_value(entry);
 
-		if (strcmp(name, "selinux") == 0) {
-			if (label_apply(file, label) < 0)
-				err(udev, "SECLABEL: failed to set SELinux label '%s'", label);
-			else
-				dbg(udev, "SECLABEL: set SELinux label '%s'", label);
-		} else
-			err(udev, "SECLABEL: unknown subsystem, ignoring '%s'='%s'", name, label);
+			if (strcmp(name, "selinux") == 0) {
+				if (label_apply(file, label) < 0)
+					err(udev, "SECLABEL: failed to set SELinux label '%s'", label);
+				else
+					dbg(udev, "SECLABEL: set SELinux label '%s'", label);
+			} else
+				err(udev, "SECLABEL: unknown subsystem, ignoring '%s'='%s'", name, label);
+		}
 	}
 
 exit:
@@ -378,7 +380,7 @@ void udev_node_update_old_links(struct udev_device *dev, struct udev_device *dev
 	}
 }
 
-int udev_node_add(struct udev_device *dev, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel_list)
+int udev_node_add(struct udev_device *dev, bool apply, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel_list)
 {
 	struct udev *udev = udev_device_get_udev(dev);
 	int i;
@@ -391,7 +393,7 @@ int udev_node_add(struct udev_device *dev, mode_t mode, uid_t uid, gid_t gid, st
 	     major(udev_device_get_devnum(dev)), minor(udev_device_get_devnum(dev)),
 	     mode, uid, gid);
 
-	if (udev_node_mknod(dev, NULL, makedev(0,0), mode, uid, gid, seclabel_list) != 0) {
+	if (udev_node_mknod(dev, NULL, makedev(0,0), apply, mode, uid, gid, seclabel_list) != 0) {
 		err = -1;
 		goto exit;
 	}
@@ -409,7 +411,7 @@ int udev_node_add(struct udev_device *dev, mode_t mode, uid_t uid, gid_t gid, st
 			partitionname[sizeof(partitionname)-1] = '\0';
 			part_devnum = makedev(major(udev_device_get_devnum(dev)),
 					    minor(udev_device_get_devnum(dev)) + i);
-			udev_node_mknod(dev, partitionname, part_devnum, mode, uid, gid, seclabel_list);
+			udev_node_mknod(dev, partitionname, part_devnum, apply, mode, uid, gid, seclabel_list);
 		}
 	}
 

@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include "libudev.h"
 #include "libudev-private.h"
@@ -40,8 +41,11 @@ struct udev_event {
 	char *tmp_node;
 	char *program_result;
 	mode_t mode;
+	bool mode_set;
 	uid_t uid;
+	bool owner_set;
 	gid_t gid;
+	bool group_set;
 	struct udev_list_node seclabel_list;
 	struct udev_list_node run_list;
 	unsigned int group_final:1;
@@ -90,8 +94,8 @@ void udev_watch_end(struct udev *udev, struct udev_device *dev);
 struct udev_device *udev_watch_lookup(struct udev *udev, int wd);
 
 /* udev-node.c */
-int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel);
-int udev_node_add(struct udev_device *dev, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel);
+int udev_node_mknod(struct udev_device *dev, const char *file, dev_t devnum, bool apply, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel);
+int udev_node_add(struct udev_device *dev, bool apply, mode_t mode, uid_t uid, gid_t gid, struct udev_list_node *seclabel);
 int udev_node_remove(struct udev_device *dev);
 void udev_node_update_old_links(struct udev_device *dev, struct udev_device *dev_old);
 
