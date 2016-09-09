@@ -20,3 +20,35 @@ script:
 - sudo ln -s ../libv4l1-videodev.h /usr/include/linux/videodev.h
 - ./configure 'CFLAGS=-Wno-unused-result -Wno-deprecated-declarations' --with-selinux --prefix=/usr --exec-prefix=/usr --sysconfdir=/etc --sbindir=/sbin --libexecdir=/lib/udev --with-rootlibdir=/lib64 --disable-introspection
 - make
+
+env:
+  global:
+    - secure: "krK+GWWzD1b/IYv6lGJX/ZmBCmSs0DTEdLOWNt0kypBHNkULNyaCx64YjtjYqyPA3V+/SbvHL79PQNTPS03VTgxoiwdHMMe+gNW2No0e3lf03edkucnGaFPxsA17UrCAwqcUVitvBcjWjSxSM1E8Cig3xljn0Iywf1zFnmrGeaO+NjG9SqiSzs9T4uqIOvaT/A0Q3SJwFmZ3PUTHpYul8FV2TWfvSLVNALsqc5rb57pvWfeG837sBSzqNFtcOLxphS4JVWzGX2aF4AlG3spOSj9AZPXk7TVnvUAbh0QPzNHygNgNT9se4BYgRvgHHmT9nsIXoIBU0X/Z/Unge2Li8eCFOHgEXoPw+2IMOBdWAh08oHFOJmFw5e/F3UoR48faCJ5JW65vXMUYSCQScObQNSl83em/m8AikfHZ23lPIRI/JC4ve6WFYyV1i6pF8lMtKf0kAHlv1KoB0N9RAirwFRfXMAuRlj+/2h31u1rCcyte8zo+1Yo6BVBIJlRY6uzirLDJgoenkkPXwBO6la4plsQ1hR++QYhpnJunNxIUlEmHN62Cr71cXgspOrvUPYgfoJRY26xBiVhRMCBnqXbbTwKTsNu5xNbvuPJWgG++RzTWuLSUhd/RJakH6w0V8BUDedIiwntMAs3kqJ3kuzCIncYz74YT1ndj7F2E4ha/CC8="
+
+addons:
+  coverity_scan:
+
+    project:
+      name: msekletar/udev
+      version: 147
+      description: udev - userspace device management
+
+    notification_email: msekleta@redhat.com
+
+    build_command_prepend: sudo ln -s ../libv4l1-videodev.h /usr/include/linux/videodev.h && ./configure 'CFLAGS=-Wno-unused-result -Wno-deprecated-declarations' --with-selinux --prefix=/usr --exec-prefix=/usr --sysconfdir=/etc --sbindir=/sbin --libexecdir=/lib/udev--with-rootlibdir=/lib64 --disable-introspection
+    build_command: make
+    branch_pattern: coverity_scan
+
+    apt:
+      packages:
+        - build-essential
+        - gperf
+        - pkg-config
+        - libglib2.0-dev
+        - libacl1-dev
+        - libusb-dev
+        - libselinux1-dev
+        - docbook-xsl
+        - xsltproc
+        - linux-headers-generic
+        - libv4l-dev
