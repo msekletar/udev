@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/msekletar/udev.svg?branch=master)](https://travis-ci.org/msekletar/udev)
+[![Coverity Scan Status](https://scan.coverity.com/projects/msekletar-udev/badge.svg)](https://scan.coverity.com/projects/msekletar-udev)
 
 # udev - userspace device management
 
