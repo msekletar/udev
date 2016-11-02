@@ -2483,10 +2483,16 @@ int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event
 			     rule->rule.filename_line);
 			break;
 		case TK_A_SECLABEL: {
+			char label_str[UTIL_LINE_SIZE] = {};
 			const char *name, *label;
 
+			udev_event_apply_format(event, &rules->buf[cur->key.value_off], label_str, sizeof(label_str));
+
 			name = &rules->buf[cur->key.attr_off];
-			label = &rules->buf[cur->key.value_off];
+			if (label_str[0] != '\0')
+				label = label_str;
+			else
+				label = &rules->buf[cur->key.value_off];
 
 			if (cur->key.op == OP_ASSIGN || cur->key.op == OP_ASSIGN_FINAL)
 				udev_list_cleanup_entries(event->udev, &event->seclabel_list);
